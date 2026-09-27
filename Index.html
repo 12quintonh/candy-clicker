@@ -1,0 +1,444 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Pixel Cake Clicker</title>
+  <!-- CountUp.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.8.0/countUp.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background-color: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    .game-container {
+      width: 100%;
+      max-width: 400px;
+      background-color: #61305d;
+      border: 4px solid #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 10px 10px;
+    }
+    .stats-panel {
+      text-align: center;
+      color: #e0d0f0;
+      margin-bottom: 20px;
+    }
+    .stat-main { font-size: 2rem; font-weight: bold; color: #ffffff; }
+    .stat-secondary { font-size: 1.6rem; font-weight: bold; color: #d0c0e0; }
+    .stat-sub { font-size: 1.3rem; color: #bca0d4; margin-top: 5px; }
+    
+    .cake-container {
+      margin: 15px 0;
+      cursor: pointer;
+    }
+    .cake-img {
+      width: 160px;
+      height: 160px;
+      image-rendering: pixelated;
+    }
+
+    .menu-panel {
+      width: 100%;
+      background-color: #ffffff;
+      border: 3px solid #000;
+      margin-top: 10px;
+      padding: 10px;
+    }
+    .menu-header {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      border-bottom: 3px solid #000;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+    .upgrade-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 2px dashed #bbb;
+    }
+    .upgrade-left { display: flex; align-items: center; gap: 8px; }
+    
+    .upgrade-icon { 
+      width: 28px; 
+      height: 28px; 
+      border: 2px solid #000; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .icon-red { background-color: #d94141; }
+    .icon-blue { background-color: #3b82f6; }
+    .icon-green { background-color: #22c55e; }
+
+    .upgrade-cost { font-size: 1rem; font-weight: bold; color: #111; }
+    .upgrade-level { font-size: 1rem; color: #222; font-weight: bold; }
+    
+    button.buy-btn {
+      padding: 6px 12px;
+      background: #eee;
+      border: 2px solid #000;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button.buy-btn:active { background: #ccc; }
+
+    .wipe-container {
+      margin-top: 15px;
+      text-align: center;
+    }
+    button.wipe-btn {
+      width: 100%;
+      padding: 8px;
+      background: #ef4444;
+      color: white;
+      border: 2px solid #000;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+    button.wipe-btn:active { background: #dc2626; }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <div class="stats-panel">
+      <!-- Main Cake Balance -->
+      <div class="stat-main" id="counter-main">0</div>
+      <!-- Click Power Display -->
+      <div class="stat-secondary">+<span id="counter-click">1</span>/click</div>
+      <!-- Dynamic Rate Display -->
+      <div class="stat-sub"><span id="counter-rate">0</span>/s</div>
+    </div>
+
+    <!-- Clickable Cake -->
+    <div class="cake-container" id="cake-btn">
+      <svg class="cake-img" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect id="cake-body" x="3" y="8" width="10" height="6" fill="#A8DADC" />
+        <rect id="cake-frosting" x="3" y="7" width="10" height="2" fill="#F1FAEE" />
+        <circle class="cake-cherry" cx="5" cy="6" r="1.5" fill="#457B9D" />
+        <circle class="cake-cherry" cx="8" cy="5" r="1.5" fill="#457B9D" />
+        <circle class="cake-cherry" cx="11" cy="6" r="1.5" fill="#457B9D" />
+      </svg>
+    </div>
+
+    <div class="menu-panel">
+      <div class="menu-header">MENU</div>
+      
+      <!-- Red Upgrade: Click Power -->
+      <div class="upgrade-row">
+        <div class="upgrade-left">
+          <div class="upgrade-icon icon-red">▲</div>
+          <div class="upgrade-cost" id="upg-red-cost">-20</div>
+        </div>
+        <div class="upgrade-level">level:<span id="upg-red-lvl">0</span></div>
+        <button class="buy-btn" id="btn-red" onclick="buyRedUpgrade()">+</button>
+      </div>
+
+      <!-- Blue Upgrade: CPS -->
+      <div class="upgrade-row">
+        <div class="upgrade-left">
+          <div class="upgrade-icon icon-blue">👆</div>
+          <div class="upgrade-cost" id="upg-blue-cost">-50</div>
+        </div>
+        <div class="upgrade-level">level:<span id="upg-blue-lvl">0</span></div>
+        <button class="buy-btn" id="btn-blue" onclick="buyBlueUpgrade()">+</button>
+      </div>
+
+      <!-- Green Upgrade: Rebirth -->
+      <div class="upgrade-row">
+        <div class="upgrade-left">
+          <div class="upgrade-icon icon-green">↻</div>
+          <div class="upgrade-cost" id="upg-green-cost">-2.00M</div>
+        </div>
+        <div class="upgrade-level">level:<span id="upg-green-lvl">0</span></div>
+        <button class="buy-btn" id="btn-green" onclick="buyRebirth()">+</button>
+      </div>
+
+      <!-- Wipe Save Button -->
+      <div class="wipe-container">
+        <button class="wipe-btn" onclick="wipeSave()">WIPE SAVE</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Web Audio API Synth Sound Effect ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function playClickSound() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.04);
+
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.04);
+    }
+
+    // --- Game State ---
+    let cakes = 0;
+    let redLevel = 0;      
+    let blueLevel = 0;     
+    let rebirthLevel = 0;  
+    let lastSaveTime = Date.now();
+
+    let clickTimestamps = [];
+
+    // Color Palettes for Rebirth Levels [Body, Frosting, Cherries]
+    const CAKE_PALETTES = [
+      { body: '#A8DADC', frosting: '#F1FAEE', cherry: '#457B9D' }, // Default (Mint/Blue)
+      { body: '#FFB7C5', frosting: '#FFFFFF', cherry: '#E63946' }, // Rebirth 1 (Pink/Strawberry)
+      { body: '#FFD166', frosting: '#FFF3B0', cherry: '#F77F00' }, // Rebirth 2 (Golden/Lemon)
+      { body: '#C77DFF', frosting: '#E0AAFF', cherry: '#7B2CBF' }, // Rebirth 3 (Purple/Grape)
+      { body: '#06D6A0', frosting: '#F1FAEE', cherry: '#118AB2' }, // Rebirth 4 (Emerald/Neon)
+      { body: '#FF70A6', frosting: '#FF9770', cherry: '#FFD670' }, // Rebirth 5 (Sunset)
+      { body: '#70D6FF', frosting: '#FF70A6', cherry: '#FF9770' } // Rebirth 6+ (Retro Tri-color)
+    ];
+
+    // Base Costs
+    const RED_BASE_COST = 20;
+    const BLUE_BASE_COST = 50;
+    const REBIRTH_BASE_COST = 2000000;
+
+    // CountUp Setup
+    const countUpOptions = {
+      duration: 0.15,
+      useGrouping: true,
+      formattingFn: formatNumber
+    };
+
+    const counterMain = new countUp.CountUp('counter-main', 0, countUpOptions);
+    const counterClick = new countUp.CountUp('counter-click', 1, countUpOptions);
+    const counterRate = new countUp.CountUp('counter-rate', 0, countUpOptions);
+
+    if (!counterMain.error) counterMain.start();
+    if (!counterClick.error) counterClick.start();
+    if (!counterRate.error) counterRate.start();
+
+    // Suffix Formatting
+    function formatNumber(num) {
+      if (num >= 1e33) return (num / 1e33).toFixed(2) + 'D'; // Decillion
+      if (num >= 1e30) return (num / 1e30).toFixed(2) + 'N'; // Nonillion
+      if (num >= 1e27) return (num / 1e27).toFixed(2) + 'Oct'; // Octillion
+      if (num >= 1e24) return (num / 1e24).toFixed(2) + 'Sp'; // Septillion
+      if (num >= 1e21) return (num / 1e21).toFixed(2) + 'S'; // Sextillion
+      if (num >= 1e18) return (num / 1e18).toFixed(2) + 'Qi'; // Quintillion
+      if (num >= 1e15) return (num / 1e15).toFixed(2) + 'Q'; // Quadrillion
+      if (num >= 1e12) return (num / 1e12).toFixed(2) + 'Tx'; // Trillion
+      if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B'; // Billion
+      if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M'; // Million
+      if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K'; // Thousand
+      return Math.floor(num).toLocaleString();
+    }
+
+    // Formulas
+    function getRedCost() { return RED_BASE_COST * Math.pow(2.11, redLevel); }
+    function getBlueCost() { return BLUE_BASE_COST * Math.pow(2.11, blueLevel); }
+    function getRebirthCost() { return REBIRTH_BASE_COST * Math.pow(50, rebirthLevel); }
+    function getRebirthMultiplier() { return Math.pow(2, rebirthLevel); }
+
+    function getClickPower() {
+      let baseClick = Math.pow(1.6, redLevel);
+      return baseClick * getRebirthMultiplier();
+    }
+
+    function getBaseCPS() {
+      if (blueLevel === 0) return 0;
+      let baseCPS = Math.pow(1.6, blueLevel - 1);
+      return baseCPS * getRebirthMultiplier();
+    }
+
+    function getActiveClickCPS() {
+      const now = Date.now();
+      clickTimestamps = clickTimestamps.filter(t => now - t <= 1000);
+      return clickTimestamps.length * getClickPower();
+    }
+
+    function getTotalRatePerSecond() {
+      return getBaseCPS() + getActiveClickCPS();
+    }
+
+    // Dynamic Cake Colors
+    function updateCakeColor() {
+      const paletteIndex = rebirthLevel % CAKE_PALETTES.length;
+      const palette = CAKE_PALETTES[paletteIndex];
+
+      document.getElementById('cake-body').setAttribute('fill', palette.body);
+      document.getElementById('cake-frosting').setAttribute('fill', palette.frosting);
+      
+      const cherries = document.querySelectorAll('.cake-cherry');
+      cherries.forEach(cherry => cherry.setAttribute('fill', palette.cherry));
+    }
+
+    // --- SAVE / LOAD SYSTEM + OFFLINE PRODUCTION ---
+    const SAVE_KEY = "pixel_cake_clicker_save";
+
+    function saveGame() {
+      const saveData = {
+        cakes: cakes,
+        redLevel: redLevel,
+        blueLevel: blueLevel,
+        rebirthLevel: rebirthLevel,
+        lastSaveTime: Date.now()
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+    }
+
+    function loadGame() {
+      const saved = localStorage.getItem(SAVE_KEY);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          cakes = data.cakes || 0;
+          redLevel = data.redLevel || 0;
+          blueLevel = data.blueLevel || 0;
+          rebirthLevel = data.rebirthLevel || 0;
+          lastSaveTime = data.lastSaveTime || Date.now();
+
+          // Calculate Offline Earnings (Max 1 hour = 3600 seconds)
+          const now = Date.now();
+          const elapsedSeconds = Math.floor((now - lastSaveTime) / 1000);
+
+          if (elapsedSeconds > 5 && getBaseCPS() > 0) {
+            const cappedSeconds = Math.min(elapsedSeconds, 3600);
+            const offlineEarned = getBaseCPS() * cappedSeconds;
+            cakes += offlineEarned;
+
+            const timeFormatted = cappedSeconds >= 3600 
+              ? "1 hour" 
+              : (cappedSeconds >= 60 ? Math.floor(cappedSeconds / 60) + " minutes" : cappedSeconds + " seconds");
+
+            alert(`Welcome back!\nWhile you were away for ${timeFormatted}, your bakery earned +${formatNumber(offlineEarned)} cakes!`);
+          }
+        } catch (e) {
+          console.error("Failed to load save data", e);
+        }
+      }
+    }
+
+    function wipeSave() {
+      if (confirm("Are you sure you want to wipe your save? All progress will be lost!")) {
+        localStorage.removeItem(SAVE_KEY);
+        cakes = 0;
+        redLevel = 0;
+        blueLevel = 0;
+        rebirthLevel = 0;
+        updateUI();
+      }
+    }
+
+    // --- Actions ---
+
+    document.getElementById('cake-btn').addEventListener('click', () => {
+      cakes += getClickPower();
+      clickTimestamps.push(Date.now());
+      playClickSound();
+      updateUI();
+      saveGame();
+    });
+
+    function buyRedUpgrade() {
+      let cost = getRedCost();
+      if (cakes >= cost) { 
+        cakes -= cost; 
+        redLevel++; 
+        updateUI(); 
+        saveGame();
+      }
+    }
+
+    function buyBlueUpgrade() {
+      let cost = getBlueCost();
+      if (cakes >= cost) { 
+        cakes -= cost; 
+        blueLevel++; 
+        updateUI(); 
+        saveGame();
+      }
+    }
+
+    function buyRebirth() {
+      let cost = getRebirthCost();
+      if (cakes >= cost) {
+        cakes = 0; 
+        redLevel = 0; 
+        blueLevel = 0; 
+        rebirthLevel++; 
+        updateUI(); 
+        saveGame();
+      }
+    }
+
+    // Passive production loop
+    setInterval(() => {
+      let passive = getBaseCPS();
+      if (passive > 0) {
+        cakes += passive / 10;
+      }
+      updateUI();
+    }, 100);
+
+    // Auto-save loop
+    setInterval(() => {
+      saveGame();
+    }, 2000);
+
+    function updateUI() {
+      counterMain.update(Math.floor(cakes));
+      counterClick.update(getClickPower());
+      counterRate.update(getTotalRatePerSecond());
+
+      document.getElementById('upg-red-cost').innerText = '-' + formatNumber(getRedCost());
+      document.getElementById('upg-red-lvl').innerText = redLevel;
+
+      document.getElementById('upg-blue-cost').innerText = '-' + formatNumber(getBlueCost());
+      document.getElementById('upg-blue-lvl').innerText = blueLevel;
+
+      document.getElementById('upg-green-cost').innerText = '-' + formatNumber(getRebirthCost());
+      document.getElementById('upg-green-lvl').innerText = rebirthLevel;
+
+      updateCakeColor();
+    }
+
+    // Initial load & render
+    loadGame();
+    updateUI();
+  </script>
+</body>
+</html>
+
